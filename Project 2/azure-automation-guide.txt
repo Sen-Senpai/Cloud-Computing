@@ -1,0 +1,202 @@
+# Azure Resource Automation — CLI Workflow
+
+A step-by-step guide to provisioning Azure resources with the CLI, tagging
+them for cost tracking, and packaging the whole workflow into a single
+reusable script.
+
+---
+
+## 1. Confirm which subscription you're working in
+
+Before creating anything, make sure you're pointed at the right Azure
+subscription — this avoids accidentally creating resources (and incurring
+costs) in the wrong place.
+
+```bash
+az account show --output table      # Shows the subscription you're currently using
+az account list --output table      # Lists every subscription you have access to
+az account set --subscription "My Subscription Name"   # Switches the active subscription
+```
+
+**Why this matters:** `az account set` changes which subscription every
+subsequent command runs against. Skipping this step is the most common cause
+of "why did this resource show up somewhere I didn't expect?"
+
+---
+
+## 2. Create a resource group
+
+A resource group is the container that holds related resources (storage,
+VMs, etc.) so you can manage and delete them together.
+
+```bash
+az group create \
+  --name resource-group-name \
+  --location <your-region> \
+  --tags project=aurora environment=automation-demo owner=<your-name>
+```
+
+**Why tag it:** Tags (`project`, `environment`, `owner`) don't affect how the
+resource works — they're metadata used for cost reporting, filtering, and
+knowing who's responsible for what later on.
+
+---
+
+## 3. Create a storage account inside the resource group
+
+```bash
+az storage account create \
+  --name storage-acct-name \
+  --resource-group resource-group-name \
+  --location <your-region> \
+  --sku Standard_LRS \
+  --tags project=aurora environment=automation-demo
+```
+
+**Why `Standard_LRS`:** This is the cheapest redundancy option (Locally
+Redundant Storage) — fine for demos/dev work where you don't need geo-redundancy.
+
+---
+
+## 4. Check what's actually in the resource group
+
+```bash
+az resource list --resource-group resource-group-name --output table
+```
+
+Useful any time you want a sanity check on what's been created so far.
+
+---
+
+## 5. Update a resource's tags without editing it manually
+
+```bash
+az tag update \
+  --resource-id $(az storage account show --name storage-acct-name --resource-group resource-group-name --query id -o tsv) \
+  --operation merge \
+  --tags reviewed=true
+```
+
+**How this works:** The inner command (`az storage account show ... --query id -o tsv`)
+looks up the storage account's full resource ID and prints just that value
+(`-o tsv` = plain text, no formatting). The `$(...)` wrapper feeds that ID
+straight into `az tag update` as the `--resource-id`, so you never have to
+copy-paste the ID by hand. `--operation merge` adds the `reviewed=true` tag
+without wiping out any tags that are already there.
+
+---
+
+## 6. Query specific fields with JMESPath
+
+```bash
+az resource list --resource-group resource-group-name \
+  --query "[].{Name:name, Location:location}" \
+  --output table
+```
+
+**Why:** `--query` uses JMESPath to pull out only the fields you care about
+(here, name and location) instead of dumping every property of every
+resource — much easier to scan.
+
+---
+
+## 7. Get a resource group's full resource ID
+
+```bash
+az group show --name resource-group-name --query id --output tsv
+```
+
+Handy when another command (like the tag update above) needs the group's ID
+as an input.
+
+---
+
+## 8. Set a monthly cost budget
+
+```bash
+az consumption budget create \
+  --budget-name "budget-name" \
+  --category "cost" \
+  --amount 30.0 \
+  -s "2026-09-01" \
+  -e "2029-09-01" \
+  --time-grain "monthly" \
+  --resource-group "resource-group-name"
+```
+
+This creates an alert-worthy spending cap of $30/month for the resource
+group, running from the start date (`-s`) to the end date (`-e`).
+
+---
+
+## 9. Bundle everything into one reusable script
+
+Instead of running each command by hand every time, save them as a script.
+
+1. **Create the file:**
+   ```bash
+   nano deploy-aurora.sh
+   ```
+2. **Start the file with a shebang line**, then paste in your commands with
+   real values filled in:
+
+   ```bash
+   #!/bin/bash
+
+   az account show --output table
+
+   az account list --output table
+
+   az account set --subscription "Microsoft Azure Sponsorship"
+
+   az group create --name rg-brightretail-automation --location EastUS \
+     --tags project=aurora environment=automation-demo owner=Dan
+
+   az storage account create --name stbrightretailauto \
+     --resource-group rg-brightretail-automation --location EastUS \
+     --sku Standard_LRS --tags project=aurora environment=automation-demo
+
+   az tag update \
+     --resource-id $(az storage account show --name stbrightretailauto --resource-group rg-brightretail-automation --query id -o tsv) \
+     --operation merge --tags reviewed=true
+
+   az resource list --resource-group rg-brightretail-automation \
+     --query "[].{Name:name, Location:location}" --output table
+
+   az consumption budget create --budget-name "budget-name" --category "cost" \
+     --amount 30.0 -s "2026-09-01" -e "2029-09-01" --time-grain "monthly" \
+     --resource-group "rg-brightretail-automation"
+   ```
+
+   > The `#!/bin/bash` shebang tells the system which interpreter to run the
+   > script with — it must be the very first line.
+
+3. **Save and exit** the editor (in `nano`: `Ctrl+O` to save, `Ctrl+X` to exit).
+
+4. **Make the script executable:**
+   ```bash
+   chmod +x deploy-aurora.sh
+   ```
+   This changes the file's permissions so it can actually be *run*, not just
+   read.
+
+5. **Double-check the contents:**
+   ```bash
+   cat deploy-aurora.sh
+   ```
+
+6. **Check for syntax errors before running it:**
+   ```bash
+   bash -n deploy-aurora.sh
+   ```
+   `-n` ("no-execute") reads through the script and reports syntax problems
+   without actually running any commands — a safe dry run.
+
+---
+
+### Quick recap of the flow
+
+```
+Confirm subscription → Create resource group → Create storage account
+   → Tag & verify resources → Set a budget → Save it all as a script
+```

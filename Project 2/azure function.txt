@@ -1,0 +1,30 @@
+Creating a Function Trigger using CLI
+
+1 input this code (func init GetStatusProject --javascript) to create a new folder containing a handful of config files.
+
+note: the --javascript should match your runtime stack
+
+2 input (cd GetStatusProject && func new) to change directories and add one specific function inside this project. 
+
+It'll interactively ask you two questions in the terminal:
+i. select the template
+ii. enter function name
+
+
+3 open the generated file and ensure the status is OK and 200 example
+
+input GetStatusProject/GetStatus/index.js or nano GetStatusProject/GetStatus/index.js to open the file
+
+4 copy, paste, save and exit then run cd ~/GetStatusProject and ls to check the files
+module.exports = async function (context, req) {
+    context.res = {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+        body: { status: "ok" }
+    };
+};
+
+
+4 Publish to AZURE by tpying this code: (func azure functionapp publish Function App Name)
+
+5 once it is done a URL will appear then go to the azure and refresh the function app created and the HTTP trigger should appear

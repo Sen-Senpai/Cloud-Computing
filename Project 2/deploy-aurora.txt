@@ -1,0 +1,26 @@
+ #!/bin/bash
+
+   az account show --output table
+
+   az account list --output table
+
+   az account set --subscription "Microsoft Azure Sponsorship"
+
+   az group create --name rg-brightretail-automation --location EastUS \
+     --tags project=aurora environment=automation-demo owner=Dan
+
+   az storage account create --name stbrightretailauto \
+     --resource-group rg-brightretail-automation --location EastUS \
+     --sku Standard_LRS --tags project=aurora environment=automation-demo
+
+   az tag update \
+     --resource-id $(az storage account show --name stbrightretailauto --resource-group rg-brightretail-automation --query id -o tsv) \
+     --operation merge --tags reviewed=true
+
+   az resource list --resource-group rg-brightretail-automation \
+     --query "[].{Name:name, Location:location}" --output table
+
+   az consumption budget create --budget-name "budget-name" --category "cost" \
+     --amount 30.0 -s "2026-09-01" -e "2029-09-01" --time-grain "monthly" \
+     --resource-group "rg-brightretail-automation"
+  

@@ -1,0 +1,97 @@
+# Creating an Azure Function HTTP Trigger — CLI Workflow
+
+A step-by-step guide to scaffolding a new Azure Function locally, writing a
+simple HTTP-triggered function, and publishing it to Azure.
+
+---
+
+## 1. Initialize a new Function App project
+
+```bash
+func init GetStatusProject --javascript
+```
+
+This creates a new folder (`GetStatusProject`) containing the config files
+Azure Functions needs to run (`host.json`, `local.settings.json`, etc.).
+
+**Why `--javascript` matters:** this flag tells the tool which language
+runtime to scaffold the project for. It must match the language you're
+actually going to write your function in — if you're using Python or C#
+instead, swap in the matching flag.
+
+---
+
+## 2. Add a function to the project
+
+```bash
+cd GetStatusProject && func new
+```
+
+This drops you into an interactive prompt in the terminal that asks:
+
+1. **Which template to use** (e.g. HTTP trigger, Timer trigger, Queue trigger)
+2. **What to name the function**
+
+For an HTTP-triggered function, pick the HTTP trigger template.
+
+---
+
+## 3. Write the function logic
+
+Open the generated file:
+
+```bash
+nano GetStatusProject/GetStatus/index.js
+```
+
+Replace the contents with a simple handler that returns a 200 OK status:
+
+```javascript
+module.exports = async function (context, req) {
+    context.res = {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+        body: { status: "ok" }
+    };
+};
+```
+
+**What this does:** `context.res` is how the function sets its HTTP
+response. Here it returns status code `200` (success), tells the client the
+body is JSON, and sends back `{ "status": "ok" }` — a minimal health-check
+endpoint.
+
+Save and exit, then confirm the files are in place:
+
+```bash
+cd ~/GetStatusProject && ls
+```
+
+---
+
+## 4. Publish the function to Azure
+
+```bash
+func azure functionapp publish <Function-App-Name>
+```
+
+Replace `<Function-App-Name>` with the actual name of the Function App
+resource you created in Azure. This uploads your local project and deploys
+it to that Function App.
+
+---
+
+## 5. Verify it's live
+
+Once publishing finishes, the terminal will print a **URL** for your new
+HTTP trigger. Head over to the Azure Portal, open the Function App, and
+refresh — the `GetStatus` function should now appear with its HTTP trigger
+listed.
+
+---
+
+### Quick recap of the flow
+
+```
+func init → func new → write function code → func azure functionapp publish → verify in Portal
+```

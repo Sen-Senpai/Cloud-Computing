@@ -1,0 +1,65 @@
+Open azure CLI which bash
+
+az account show --output table (this shows the subcripton you working on/confirm switch in a table format)
+
+az account list --output table(See which subscriptions you have access to in a table format)
+
+az account set --subscription "My Subscription Name"(Set the subcription to the one you want as active)
+
+az group create --name resource-group-name --location <your-region> --tags 
+project=aurora environment=automation-demo owner=<your-name> (create a resource group)
+
+az storage account create --name storage-acct-name --resource-group resource-group-name --location <your-region> --sku Standard_LRS --tags project=aurora 
+environment=automation-demo (Creating a storage account)
+
+az resource list --resource-group resource-group-name --output table (to view evry resorces in the resource geoup in a table format)
+
+az tag update --resource-id $(az storage account show --name storage-acct-name --resource-group resource-group-name --query id -o tsv) --operation merge --tags reviewed=true
+(To update the stoage acct tag without doing it manually)
+
+az resource list --resource-group resource-group-name --query "[].{Name:name, Location:location}" --output table(Query just the names and locations of resources with a JMESPath filter)
+
+az group show --name resource-group-name --query id --output tsv (To get the resource group's full resource ID)
+
+
+To Create A Consumption Budget:
+az consumption budget create --budget-name "budget-name"--category "cost" --amount 30.0 -s "2026-09-01" -e "2029-09-01" --time-grain "monthly" --resource-group "resource-group-name"
+
+
+To Create Single file where it can be ran with one single command
+
+1. run "nano deploy-aurora.sh" to open a file where you put all the command you ran
+
+2. open the file in an editor for easy editing and saving of the file.
+
+3. start with " #!/bin/bash" and paste all the command you use
+
+For Examples
+
+#!/bin/bash
+
+az account show --output table
+
+az account list --output table
+
+az account set --subscription "Microsoft Azure Sponsorship"
+
+az group create --name  rg-brightretail-automation --location EastUS --tags 
+project=aurora environment=automation-demo owner=Dan
+
+az storage account create --name stbrightretailauto --resource-group rg-brightretail-automation --location EastUS --sku Standard_LRS --tags project=aurora 
+environment=automation-demo
+
+az tag update --resource-id $(az storage account show --name stbrightretailauto --resource-group rg-brightretail-automation --query id -o tsv) --operation merge --tags reviewed=true
+
+az resource list --resource-group rg-brightretail-automation --query "[].{Name:name, Location:location}" --output table
+
+az consumption budget create --budget-name "budget-name"--category "cost" --amount 30.0 -s "2026-09-01" -e "2029-09-01" --time-grain "monthly" --resource-group "rg-brightretail-automation"
+
+4. Save the file and exit 
+
+5. Make the file excuable by running (chmod +x deploy-aurora.sh)
+
+6. To Verify the Content run (cat deploy-aurora.sh)
+
+7. To check for syntax error run (bash -n deploy-aurora.sh)

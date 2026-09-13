@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>404 — Signal Lost</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #FAFAF8;
+    --ink: #16171A;
+    --ink-soft: #4A4C52;
+    --line: #D6D8DC;
+    --line-strong: #BFC2C8;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+  }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'IBM Plex Mono', monospace;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 32px;
+    background-image:
+      linear-gradient(var(--line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    background-size: 40px 40px;
+    background-position: center center;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+
+  .stage {
+    width: 100%;
+    max-width: 760px;
+    background: var(--paper);
+    border: 1px solid var(--line-strong);
+    padding: 56px 48px 44px;
+    position: relative;
+  }
+
+  .stage::before {
+    content: "";
+    position: absolute;
+    top: -1px; left: -1px; right: -1px; bottom: -1px;
+    border: 1px solid var(--paper);
+    pointer-events: none;
+  }
+
+  .eyebrow {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 16px;
+    margin-bottom: 40px;
+  }
+
+  .eyebrow span:last-child {
+    color: var(--ink);
+  }
+
+  .main {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 40px;
+    align-items: center;
+  }
+
+  .code {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: clamp(72px, 14vw, 128px);
+    line-height: 0.85;
+    letter-spacing: -0.02em;
+  }
+
+  .headline {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 22px;
+    margin-top: 18px;
+    color: var(--ink);
+  }
+
+  .desc {
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--ink-soft);
+    margin-top: 14px;
+    max-width: 42ch;
+  }
+
+  .path-row {
+    margin-top: 22px;
+    font-size: 12px;
+    color: var(--ink-soft);
+    display: flex;
+    gap: 8px;
+  }
+
+  .path-row .val {
+    color: var(--ink);
+    word-break: break-all;
+  }
+
+  /* --- Radar signature --- */
+  .radar-wrap {
+    width: 168px;
+    height: 168px;
+    position: relative;
+    flex-shrink: 0;
+  }
+
+  .radar {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 1px solid var(--line-strong);
+    position: relative;
+    overflow: hidden;
+    background:
+      radial-gradient(circle, transparent 0 32%, var(--line) 32% 33%, transparent 33% 100%),
+      radial-gradient(circle, transparent 0 64%, var(--line) 64% 65%, transparent 65% 100%);
+  }
+
+  .radar::before,
+  .radar::after {
+    content: "";
+    position: absolute;
+    background: var(--line);
+  }
+  .radar::before { top: 0; bottom: 0; left: 50%; width: 1px; }
+  .radar::after { left: 0; right: 0; top: 50%; height: 1px; }
+
+  .sweep {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: conic-gradient(from 0deg, rgba(22,23,26,0.28), transparent 28%);
+    animation: spin 3.2s linear infinite;
+    transform-origin: 50% 50%;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .blip {
+    position: absolute;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--ink);
+    top: 38%;
+    left: 62%;
+    opacity: 0;
+    animation: ping 3.2s linear infinite;
+  }
+
+  @keyframes ping {
+    0%, 96%, 100% { opacity: 0; }
+    18% { opacity: 1; }
+    30% { opacity: 0; }
+  }
+
+  .radar-label {
+    text-align: center;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin-top: 10px;
+  }
+
+  .actions {
+    margin-top: 44px;
+    padding-top: 24px;
+    border-top: 1px solid var(--line);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--paper);
+    background: var(--ink);
+    border: 1px solid var(--ink);
+    padding: 12px 20px;
+    text-decoration: none;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+
+  .btn:hover { background: transparent; color: var(--ink); }
+  .btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+
+  .btn-arrow { transition: transform 0.15s ease; }
+  .btn:hover .btn-arrow { transform: translateX(-3px); }
+
+  .status-line {
+    font-size: 11px;
+    color: var(--ink-soft);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--ink);
+    animation: blink 1.6s ease-in-out infinite;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.15; }
+  }
+
+  @media (max-width: 560px) {
+    .stage { padding: 40px 24px 32px; }
+    .main { grid-template-columns: 1fr; }
+    .radar-wrap { justify-self: center; }
+    .actions { flex-direction: column; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+  <main class="stage">
+    <div class="eyebrow">
+      <span>Status</span>
+      <span>404 · Not Found</span>
+    </div>
+
+    <div class="main">
+      <div>
+        <div class="code">404</div>
+        <div class="headline">This page didn't answer the call.</div>
+        <p class="desc">
+          The address checks out, but nothing's listening on the other end.
+          It may have moved, been renamed, or never existed at this location.
+        </p>
+        <div class="path-row">
+          <span>Requested&nbsp;path</span>
+          <span class="val" id="req-path">—</span>
+        </div>
+      </div>
+
+      <div>
+        <div class="radar-wrap" role="img" aria-label="Radar sweeping and finding nothing">
+          <div class="radar">
+            <div class="sweep"></div>
+            <div class="blip"></div>
+          </div>
+        </div>
+        <div class="radar-label">Scanning · no match</div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <div class="status-line">
+        <span class="status-dot"></span>
+        <span>Server reachable — resource not found</span>
+      </div>
+      <a class="btn" href="/">
+        <span class="btn-arrow">←</span>
+        <span>Back to home</span>
+      </a>
+    </div>
+  </main>
+
+  <script>
+    document.getElementById('req-path').textContent = window.location.pathname || '/';
+  </script>
+
+</body>
+</html>
