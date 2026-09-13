@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Faktlens Digital Services | Next-Gen IT & Cloud Solutions</title>
+    <!-- Google Fonts & FontAwesome Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --primary-color: #0078d4; /* Azure Blue */
+            --primary-hover: #005a9e;
+            --secondary-color: #0f172a;
+            --accent-color: #00d8d6;
+            --light-bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #334155;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: var(--light-bg);
+            color: var(--text-main);
+            line-height: 1.6;
+        }
+
+        /* --- Header & Navigation --- */
+        header {
+            background-color: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1.2rem 2rem;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--secondary-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo i {
+            color: var(--primary-color);
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text-main);
+            font-weight: 600;
+            transition: color 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary-color);
+        }
+
+        .btn-header {
+            background-color: var(--primary-color);
+            color: #fff !important;
+            padding: 0.6rem 1.2rem;
+            border-radius: 6px;
+            transition: background 0.3s ease !important;
+        }
+
+        .btn-header:hover {
+            background-color: var(--primary-hover) !important;
+        }
+
+        /* --- Hero Section --- */
+        .hero {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #fff;
+            padding: 6rem 2rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(0, 120, 212, 0.15) 0%, transparent 60%);
+            pointer-events: none;
+        }
+
+        .hero-content {
+            max-width: 800px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-tag {
+            display: inline-block;
+            background: rgba(0, 120, 212, 0.2);
+            color: var(--accent-color);
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            border: 1px solid rgba(0, 216, 214, 0.3);
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 1.2rem;
+            line-height: 1.2;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            color: #94a3b8;
+            margin-bottom: 2rem;
+        }
+
+        .hero-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 0.8rem 1.8rem;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: #fff;
+            box-shadow: 0 4px 14px rgba(0, 120, 212, 0.4);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background-color: transparent;
+            color: #fff;
+            border: 1px solid #475569;
+        }
+
+        .btn-secondary:hover {
+            background-color: #334155;
+            border-color: #64748b;
+        }
+
+        /* --- Architecture & Status Badge --- */
+        .status-section {
+            max-width: 1200px;
+            margin: -2rem auto 4rem auto;
+            padding: 0 2rem;
+            position: relative;
+            z-index: 10;
+        }
+
+        .status-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.5rem 2rem;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+            border: 1px solid var(--border-color);
+            flex-wrap: wrap;
+            gap: 1.5rem;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .status-item i {
+            font-size: 2rem;
+            color: var(--primary-color);
+        }
+
+        .status-info h4 {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-info p {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--secondary-color);
+        }
+
+        /* --- Services Section --- */
+        .services {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 4rem 2rem;
+        }
+
+        .section-title {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .section-title h2 {
+            font-size: 2.25rem;
+            color: var(--secondary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .section-title p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+        }
+
+        .service-card {
+            background: var(--card-bg);
+            padding: 2.5rem 2rem;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+
+        .service-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 20px rgba(0, 0, 0, 0.06);
+            border-color: var(--primary-color);
+        }
+
+        .service-icon {
+            width: 60px;
+            height: 60px;
+            background: rgba(0, 120, 212, 0.1);
+            color: var(--primary-color);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .service-card h3 {
+            font-size: 1.25rem;
+            margin-bottom: 0.75rem;
+            color: var(--secondary-color);
+        }
+
+        .service-card p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        /* --- Interactive Demo Section --- */
+        .demo-section {
+            background-color: var(--secondary-color);
+            color: #fff;
+            padding: 5rem 2rem;
+        }
+
+        .demo-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            align-items: center;
+        }
+
+        .demo-text h2 {
+            font-size: 2.25rem;
+            margin-bottom: 1rem;
+        }
+
+        .demo-text p {
+            color: #94a3b8;
+            margin-bottom: 2rem;
+        }
+
+        .demo-box {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .demo-field {
+            margin-bottom: 1.2rem;
+        }
+
+        .demo-field label {
+            display: block;
+            font-size: 0.875rem;
+            color: #94a3b8;
+            margin-bottom: 0.5rem;
+        }
+
+        .demo-field input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border-radius: 6px;
+            border: 1px solid #475569;
+            background: #0f172a;
+            color: #fff;
+            outline: none;
+        }
+
+        .demo-field input:focus {
+            border-color: var(--primary-color);
+        }
+
+        /* --- Footer --- */
+        footer {
+            background: #090d16;
+            color: #64748b;
+            padding: 3rem 2rem 1.5rem 2rem;
+            border-top: 1px solid #1e293b;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid #1e293b;
+        }
+
+        .footer-logo {
+            color: #fff;
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        .copyright {
+            max-width: 1200px;
+            margin: 1.5rem auto 0 auto;
+            text-align: center;
+            font-size: 0.875rem;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .navbar { flex-direction: column; gap: 1rem; }
+            .nav-links { gap: 1rem; }
+            .hero h1 { font-size: 2.2rem; }
+            .demo-container { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header / Navigation -->
+    <header>
+        <nav class="navbar">
+            <div class="logo">
+                <i class="fa-solid => fa-cloud"></i> Faktlens Digital
+            </div>
+            <ul class="nav-links">
+                <li><a href="#services">Services</a></li>
+                <li><a href="#architecture">Infrastructure</a></li>
+                <li><a href="#contact">Contact</a></li>
+                <li><a href="#contact" class="btn-header">Get Started</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <span class="hero-tag"><i class="fa-solid fa-bolt"></i> Cloud Transformation Ready</span>
+            <h1>Empowering Businesses with Scalable Azure Cloud Solutions</h1>
+            <p>Faktlens Digital Services provides secure, high-performance, and cost-effective cloud infrastructure to drive digital growth.</p>
+            <div class="hero-buttons">
+                <a href="#services" class="btn btn-primary">Explore Services</a>
+                <a href="#contact" class="btn btn-secondary">Request Demo</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Infrastructure Status Bar -->
+    <section class="status-section" id="architecture">
+        <div class="status-card">
+            <div class="status-item">
+                <i class="fa-solid fa-server"></i>
+                <div class="status-info">
+                    <h4>Web Infrastructure</h4>
+                    <p>IIS / Windows Server</p>
+                </div>
+            </div>
+            <div class="status-item">
+                <i class="fa-solid fa-shield-halved"></i>
+                <div class="status-info">
+                    <h4>Network Security</h4>
+                    <p>NSG & Subnet Isolated</p>
+                </div>
+            </div>
+            <div class="status-item">
+                <i class="fa-solid fa-database"></i>
+                <div class="status-info">
+                    <h4>Storage Architecture</h4>
+                    <p>Azure Blob Storage</p>
+                </div>
+            </div>
+            <div class="status-item">
+                <i class="fa-solid fa-chart-line"></i>
+                <div class="status-info">
+                    <h4>System Uptime</h4>
+                    <p style="color: #10b981;">99.9% Operational</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Services Section -->
+    <section class="services" id="services">
+        <div class="section-title">
+            <h2>Our Core Capabilities</h2>
+            <p>Tailored enterprise digital solutions engineered for reliability and performance.</p>
+        </div>
+
+        <div class="services-grid">
+            <div class="service-card">
+                <div class="service-icon"><i class="fa-solid fa-cloud-arrow-up"></i></div>
+                <h3>Cloud Migration</h3>
+                <p>Seamless transition of on-premises workloads to Microsoft Azure with minimal downtime and optimal cost control.</p>
+            </div>
+
+            <div class="service-card">
+                <div class="service-icon"><i class="fa-solid fa-lock"></i></div>
+                <h3>Network Security</h3>
+                <p>Custom Virtual Network (VNet) design, Network Security Groups (NSGs), and RBAC access controls.</p>
+            </div>
+
+            <div class="service-card">
+                <div class="service-icon"><i class="fa-solid fa-hard-drive"></i></div>
+                <h3>Cloud Storage & Backup</h3>
+                <p>Highly available Azure Blob Storage solutions with disaster recovery planning and defined RPO/RTO goals.</p>
+            </div>
+
+            <div class="service-card">
+                <div class="service-icon"><i class="fa-solid fa-microchip"></i></div>
+                <h3>App Modernization</h3>
+                <p>Transitioning traditional IIS virtual machines into serverless Azure Functions and PaaS App Services.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Interactive Contact/Demo Section -->
+    <section class="demo-section" id="contact">
+        <div class="demo-container">
+            <div class="demo-text">
+                <h2>Ready to elevate your IT infrastructure?</h2>
+                <p>Get in touch with our Cloud Engineering team to evaluate your environment and build a tailored cloud roadmap for your business.</p>
+            </div>
+            <div class="demo-box">
+                <form id="contactForm" onsubmit="event.preventDefault(); alert('Thank you! Your request has been logged successfully.');">
+                    <div class="demo-field">
+                        <label>Full Name</label>
+                        <input type="text" placeholder="John Doe" required>
+                    </div>
+                    <div class="demo-field">
+                        <label>Work Email</label>
+                        <input type="email" placeholder="john@company.com" required>
+                    </div>
+                    <div class="demo-field">
+                        <label>Service Request</label>
+                        <input type="text" placeholder="Cloud Migration / Assessment" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Submit Inquiry</button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-logo">
+                <i class="fa-solid fa-cloud"></i> Faktlens Digital Services
+            </div>
+            <div>
+                Hosted on Azure Cloud Infrastructure (IIS Web Server)
+            </div>
+        </div>
+        <div class="copyright">
+            &copy; 2026 Faktlens Digital Services. All rights reserved.
+        </div>
+    </footer>
+
+</body>
+</html>

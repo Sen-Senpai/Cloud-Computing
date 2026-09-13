@@ -1,0 +1,118 @@
+AZURE STORAGE ACCOUNT, BUILT WITH BICEP
+A simple Infrastructure as Code template, plus how to use it
+
+This template describes a storage account the same way it would be
+configured by hand in the Azure Portal: Standard performance, Locally
+Redundant storage, and public access turned off. Save the code below into
+a file, then use the commands under it to check and deploy it.
+
+
+THE TEMPLATE
+
+Save this as storage.bicep
+
+    param storageAccountName string
+    param location string = resourceGroup().location
+
+    resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
+      name: storageAccountName
+      location: location
+      sku: {
+        name: 'Standard_LRS'
+      }
+      kind: 'StorageV2'
+      properties: {
+        allowBlobPublicAccess: false
+      }
+    }
+
+
+WHAT EACH PART MEANS
+
+param storageAccountName string
+    This asks for a name every time the template is deployed. It has no
+    default value on purpose, since storage account names must be
+    globally unique across all of Azure, so one fixed name could not be
+    reused safely.
+
+param location string = resourceGroup().location
+    This also asks for a region, but it has a default value. If nothing
+    else is specified, it will automatically use whatever region the
+    resource group itself is in.
+
+resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
+    This is the actual definition of the resource being created. The text
+    in quotes is the resource type and the API version Azure should use.
+
+sku: { name: 'Standard_LRS' }
+    Sets the performance tier to Standard and the redundancy to Locally
+    Redundant storage, the cheapest option that still protects against a
+    single hardware failure.
+
+kind: 'StorageV2'
+    The general purpose storage account type, suitable for blobs, files,
+    and most everyday storage needs.
+
+properties: { allowBlobPublicAccess: false }
+    Disables public access at the account level, so no container inside
+    it can be made publicly readable, matching the same security choice
+    made by hand in earlier sessions.
+
+
+HOW TO CREATE THE FILE IN CLOUD SHELL
+
+    nano storage.bicep
+
+Paste or type in the template above. To save:
+    Press Ctrl and O together, then press Enter to confirm the filename.
+    Press Ctrl and X together to exit.
+
+
+HOW TO CHECK THE TEMPLATE BEFORE DEPLOYING ANYTHING
+
+This shows what would happen without actually creating anything yet.
+Replace YOURRESOURCEGROUP and pick a unique name for the storage account.
+
+    az deployment group what-if --resource-group YOURRESOURCEGROUP --template-file storage.bicep --parameter storageAccountName=yourstorageaccountname
+
+Check the output carefully. A line starting with a plus sign next to
+Microsoft.Storage/storageAccounts means it would be created successfully.
+Read any error message all the way to the end, since the real cause is
+often a small detail near the bottom, such as a misspelled resource group
+name, rather than something wrong with the template itself.
+
+
+HOW TO ACTUALLY DEPLOY IT
+
+Once the check above looks correct, run the same command with create
+instead of what-if, using the exact same storage account name.
+
+    az deployment group create --resource-group YOURRESOURCEGROUP --template-file storage.bicep --parameter storageAccountName=yourstorageaccountname
+
+
+HOW TO CONFIRM IT WORKED
+
+Go to the resource group in the Azure Portal and open the new storage
+account. Check that Performance shows Standard, Replication shows Locally
+Redundant, and Allow Blob public access shows Disabled, matching exactly
+what the template specified.
+
+
+REUSING THIS TEMPLATE FOR SOMETHING ELSE
+
+Since storageAccountName and location are both parameters rather than
+fixed values, this same file can be deployed again with a different name
+into a different resource group entirely, without editing the template
+itself. Only the values passed in the --parameter option need to change.
+
+
+COMMON MISTAKE TO WATCH FOR
+
+Both --parameter and --parameters work in Azure CLI, they are accepted as
+the same option, so either spelling is fine.
+
+A long error message with many lines of file paths and code references
+usually still has its real, useful explanation in the very last few
+lines. Read to the bottom before assuming the whole template is wrong,
+the actual cause is often something simple, like a typo in a resource
+group name.

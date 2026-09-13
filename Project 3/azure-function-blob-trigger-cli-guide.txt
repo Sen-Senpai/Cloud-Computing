@@ -1,0 +1,191 @@
+CREATING AN AZURE FUNCTION BLOB TRIGGER
+A step by step guide using Azure Cloud Shell
+
+This is the working version, based on what actually succeeded, including
+the fixes needed along the way. Follow it in order, running one command
+at a time and waiting for each to finish before moving to the next.
+
+
+STEP 1: SET UP A WRITABLE FOLDER FOR THE TOOLS
+
+Cloud Shell will not let you install tools into the default system folder.
+Point npm at your own home folder instead.
+
+    mkdir -p ~/.npm-global
+    npm config set prefix ~/.npm-global
+    export PATH=~/.npm-global/bin:$PATH
+
+Confirm it worked before moving on.
+
+    npm config get prefix
+
+This should print something like /home/yourname/.npm-global, not a system
+path. If it does not, redo the three commands above before continuing.
+
+
+STEP 2: INSTALL THE AZURE FUNCTIONS CORE TOOLS
+
+    npm install -g azure-functions-core-tools@4 --unsafe-perm true
+
+Confirm it installed correctly.
+
+    func --version
+
+This should print a version number such as 4.14.0. If you see a
+permission error instead, Step 1 was not completed correctly, redo it.
+
+
+STEP 3: CREATE A NEW LOCAL FUNCTION PROJECT
+
+    func init myfunctionproject --javascript
+    cd myfunctionproject
+
+Note: Cloud Shell sessions do not save files between sessions. If you
+close Cloud Shell and come back later, you will need to redo Steps 1 to 3
+again before continuing.
+
+
+STEP 4: ADD A BLOB STORAGE TRIGGER FUNCTION
+
+    func new --name BlobTriggerFunction --template "Azure Blob Storage trigger"
+
+Important: on the current Node.js model, this command usually does NOT
+ask you for the container path during setup, unlike older guides. It
+just creates the function with a placeholder path already filled in. You
+have to edit that path manually in the next step.
+
+If it asks to overwrite an existing file, type y and press Enter.
+
+
+STEP 5: EDIT THE FUNCTION CODE TO POINT AT THE RIGHT CONTAINER
+
+Open the generated function file.
+
+    nano src/functions/BlobTriggerFunction.js
+
+Look for a line that says something like:
+
+    path: 'samples-workitems/{name}',
+
+Change the container name to match your actual container. For example,
+if your container is called images, change it to:
+
+    path: 'images/{name}',
+
+Leave the /{name} part exactly as it is, that represents the uploaded
+file's name and should not be edited.
+
+Also confirm this line is present and unchanged:
+
+    connection: 'AzureWebJobsStorage',
+
+To save in nano:
+    Press Ctrl and O together, then press Enter to confirm the filename.
+    Press Ctrl and X together to exit.
+
+
+STEP 6: GET YOUR STORAGE ACCOUNT KEY
+
+    az storage account keys list --account-name YOURSTORAGEACCOUNT --resource-group YOURRESOURCEGROUP --query "[0].value" -o tsv
+
+This prints the raw key on its own line. Copy it exactly. Do not use a
+placeholder or example text in the next step, it must be this real value.
+
+
+STEP 7: CONNECT THE FUNCTION APP TO YOUR STORAGE ACCOUNT
+
+Replace YOURSTORAGEACCOUNT, YOURRESOURCEGROUP, YOURFUNCTIONAPPNAME, and
+PASTE_YOUR_REAL_KEY_HERE with your own actual values before running this.
+
+    az functionapp config appsettings set --name YOURFUNCTIONAPPNAME --resource-group YOURRESOURCEGROUP --settings "AzureWebJobsStorage=DefaultEndpointsProtocol=https;EndpointSuffix=core.windows.net;AccountName=YOURSTORAGEACCOUNT;AccountKey=PASTE_YOUR_REAL_KEY_HERE;BlobEndpoint=https://YOURSTORAGEACCOUNT.blob.core.windows.net/;FileEndpoint=https://YOURSTORAGEACCOUNT.file.core.windows.net/;QueueEndpoint=https://YOURSTORAGEACCOUNT.queue.core.windows.net/;TableEndpoint=https://YOURSTORAGEACCOUNT.table.core.windows.net/"
+
+Confirm it actually saved a real value, not a placeholder.
+
+    az functionapp config appsettings list --name YOURFUNCTIONAPPNAME --resource-group YOURRESOURCEGROUP --query "[?name=='AzureWebJobsStorage']"
+
+The printed value should contain your real key, not the words
+PASTE_YOUR_REAL_KEY_HERE. If it does, go back and redo this step.
+
+
+STEP 8: SET A CURRENT NODE.JS VERSION ON THE FUNCTION APP
+
+An old default Node version will cause the function to fail to start
+with a syntax error. Set a current version explicitly.
+
+    az functionapp config appsettings set --name YOURFUNCTIONAPPNAME --resource-group YOURRESOURCEGROUP --settings WEBSITE_NODE_DEFAULT_VERSION="~20"
+
+
+STEP 9: DEPLOY THE FUNCTION TO AZURE
+
+    func azure functionapp publish YOURFUNCTIONAPPNAME --force
+
+The --force flag matters here. Without it, the deploy can fail if the
+Function App in Azure was originally set up expecting a different
+language runtime than your local project. Force tells it to update the
+Azure app to match your local project instead.
+
+
+STEP 10: RESTART THE FUNCTION APP
+
+    az functionapp restart --name YOURFUNCTIONAPPNAME --resource-group YOURRESOURCEGROUP
+
+This makes sure all the new settings actually get picked up.
+
+
+STEP 11: WATCH THE LIVE LOGS
+
+    az webapp log tail --name YOURFUNCTIONAPPNAME --resource-group YOURRESOURCEGROUP
+
+Note: the correct command uses "webapp" here, not "functionapp". Leave
+this running in the terminal.
+
+
+STEP 12: TEST IT WITH A REAL FILE
+
+While the log stream from Step 11 is still running, open a separate
+browser tab, go to your storage account, open the container your
+function is watching, and upload a small test file.
+
+Switch back to the terminal. Within a few seconds you should see log
+lines showing the function executing and naming the file you uploaded.
+That confirms the whole chain is actually working, not just configured.
+
+
+COMMON PROBLEMS AND WHAT THEY ACTUALLY MEAN
+
+"'tail' is misspelled or not recognized"
+  You typed "az functionapp log tail" instead of "az webapp log tail".
+  Function Apps use the webapp command for log streaming.
+
+"Your Azure Function App has 'FUNCTIONS_WORKER_RUNTIME' set to X while
+your local project is set to Y"
+  The Function App in Azure was created expecting a different language
+  than what you built locally. Add --force to the publish command.
+
+"SyntaxError: Use of const in strict mode"
+  The Function App is running an old Node.js version that cannot read
+  modern JavaScript. Set WEBSITE_NODE_DEFAULT_VERSION as shown in Step 8.
+
+Trigger connects but the app setting shows "value": null
+  The appsettings set command did not actually save, often because the
+  command was cut off or merged with another line while pasting. Re-run
+  it as one single command and confirm with the appsettings list command.
+
+Trigger connects but the setting shows the literal word
+PASTE_YOUR_REAL_KEY_HERE instead of an actual key
+  The placeholder text was never replaced with the real key. Copy the
+  actual key from Step 6 and paste it in, not the placeholder wording.
+
+No such directory exists when trying to find your project folder again
+  Cloud Shell sessions are temporary. Files do not carry over between
+  sessions. Redo Steps 1 to 5 in the new session.
+
+Access denied when trying to save an edited file inside Kudu
+  Kudu's browser based file editor does not always allow saving. Edit
+  the file locally in Cloud Shell with nano instead, then redeploy with
+  func azure functionapp publish, rather than editing directly in Kudu.
+
+Function does not appear in the portal's Functions list at all
+  This usually means the app failed to start due to an error, often the
+  Node version problem in Step 8. Check the live logs in Step 11 for the
+  actual error message rather than assuming the deploy itself failed.
