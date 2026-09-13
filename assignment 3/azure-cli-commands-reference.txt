@@ -1,0 +1,292 @@
+# Azure CLI — Commands Reference
+
+A compiled reference of Azure CLI commands:
+account/subscription management, creating resources, deleting resources,
+and the storage authentication warning.
+
+---
+
+## 1. Login & Account Basics
+
+```bash
+az login                          # Opens a browser to authenticate your account
+az account show                   # Shows the subscription currently active
+az account list --output table    # Lists every subscription you have access to
+az account set --subscription "<subscription-id-or-name>"   # Switches the active subscription
+```
+
+**Why this matters:** Every subsequent `az` command runs against whichever
+subscription is currently "set." Checking this first avoids accidentally
+creating (and paying for) resources in the wrong subscription.
+
+If a subscription belongs to a different tenant, log in against that tenant
+first:
+```bash
+az login --tenant <tenant-id>
+```
+
+Quick helpers:
+```bash
+az account show --query name -o tsv     # Prints just the active subscription's name
+```
+
+---
+
+## 2. Exploring What Exists
+
+```bash
+az group list --output table                          # All resource groups
+az group show --name <rg-name>                         # Details of one resource group
+az vm list --output table                              # All VMs in the subscription
+az vm list --resource-group <rg-name> --output table   # VMs in one resource group
+az vm show --resource-group <rg-name> --name <vm-name>
+az vm list-sizes --location eastus --output table      # Available VM sizes in a region
+
+az network vnet list --output table
+az network nsg list --output table
+az network nsg rule list --resource-group <rg-name> --nsg-name <nsg-name> --output table
+az network public-ip list --output table
+
+az storage account list --output table
+az storage account show --name <account-name> --resource-group <rg-name>
+az storage container list --account-name <account-name> --output table
+
+az functionapp list --output table
+az functionapp show --name <app-name> --resource-group <rg-name>
+
+az ad signed-in-user show                              # Your own signed-in identity
+az role assignment list --output table                 # RBAC role assignments
+az role definition list --output table --query "[].{Name:roleName}"
+
+az vmss list --output table
+az vmss list-instances --resource-group <rg-name> --name <vmss-name> --output table
+
+az monitor log-analytics workspace list --output table
+
+az resource list --output table         # Every resource in the subscription
+az provider list --output table         # Registered resource providers
+az --version                            # CLI version + installed extensions
+az find "az vm create"                  # AI-assisted command help
+```
+
+**Why this matters:** These are all read-only "look but don't touch"
+commands — safe to run any time you want a sanity check on what's already
+deployed before creating or deleting anything.
+
+---
+
+## 3. Creating Resources
+
+A typical build order: resource group → network → compute/storage → app layer.
+
+### Resource group (create this first)
+```bash
+az group create --name myResourceGroup --location eastus
+```
+
+### Virtual network + subnet
+```bash
+az network vnet create \
+  --resource-group myResourceGroup \
+  --name myVNet \
+  --location eastus \
+  --address-prefix 10.0.0.0/16 \
+  --subnet-name mySubnet \
+  --subnet-prefix 10.0.0.0/24
+```
+**Why `--location` matters:** `vnet create` doesn't always inherit the
+resource group's region automatically — passing it explicitly avoids the
+"location property" error. If unsure of the resource group's region:
+```bash
+az group show --name myResourceGroup --query location -o tsv
+```
+
+### Network Security Group + rule
+```bash
+az network nsg create --resource-group myResourceGroup --name myNSG
+
+az network nsg rule create \
+  --resource-group myResourceGroup \
+  --nsg-name myNSG \
+  --name Allow-SSH \
+  --priority 100 \
+  --destination-port-ranges 22 \
+  --access Allow \
+  --protocol Tcp
+```
+
+### Virtual machine
+```bash
+az vm create \
+  --resource-group myResourceGroup \
+  --name myVM \
+  --image Ubuntu2204 \
+  --admin-username azureuser \
+  --generate-ssh-keys \
+  --vnet-name myVNet \
+  --subnet mySubnet \
+  --nsg myNSG \
+  --size Standard_B1s
+```
+**Why `--generate-ssh-keys`:** Auto-creates an SSH key pair if you don't
+already have one. Drop it and use `--admin-password` instead for
+password-based auth.
+
+### Storage account + container
+```bash
+az storage account create \
+  --name mystorageacct123 \
+  --resource-group myResourceGroup \
+  --location eastus \
+  --sku Standard_LRS \
+  --kind StorageV2
+
+az storage container create \
+  --account-name mystorageacct123 \
+  --name mycontainer \
+  --auth-mode login
+```
+**Why `--auth-mode login`:** Uses your Azure AD identity (instead of an
+account key) to authenticate — see the warning explanation in Section 5.
+
+### Function App
+```bash
+az functionapp create \
+  --resource-group myResourceGroup \
+  --consumption-plan-location eastus \
+  --runtime node \
+  --functions-version 4 \
+  --name myFunctionApp123 \
+  --storage-account mystorageacct123
+```
+
+### VM Scale Set (VMSS)
+```bash
+az vmss create \
+  --resource-group myResourceGroup \
+  --name myVMSS \
+  --image Ubuntu2204 \
+  --admin-username azureuser \
+  --generate-ssh-keys \
+  --instance-count 2 \
+  --vm-sku Standard_B1s
+```
+
+### Log Analytics workspace
+```bash
+az monitor log-analytics workspace create \
+  --resource-group myResourceGroup \
+  --workspace-name myWorkspace
+```
+
+**General creation pattern to remember:**
+```bash
+az <service> create --resource-group <rg> --name <name> [service-specific flags]
+```
+Check any command's required flags with `az <service> create --help`.
+
+---
+
+## 4. Deleting Resources
+
+### Whole resource group (fastest, cleanest way to tear everything down)
+```bash
+az group delete --name myResourceGroup --yes --no-wait
+```
+- `--yes` skips the confirmation prompt
+- `--no-wait` returns immediately instead of blocking until deletion finishes
+
+Check progress (command will eventually fail with "not found" once done):
+```bash
+az group show --name myResourceGroup
+```
+
+### Individual resources
+```bash
+az vm delete --resource-group myResourceGroup --name myVM --yes
+```
+**Note:** Deleting a VM does *not* delete its disk, NIC, or public IP —
+those must be deleted separately or they'll linger (and keep costing money).
+
+```bash
+az network nic delete --resource-group myResourceGroup --name myVMVMNic
+az disk delete --resource-group myResourceGroup --name myVM_disk1 --yes
+az network public-ip delete --resource-group myResourceGroup --name myVMPublicIP
+az network nsg delete --resource-group myResourceGroup --name myNSG
+az network vnet delete --resource-group myResourceGroup --name myVNet
+
+az storage account delete --resource-group myResourceGroup --name mystorageacct123 --yes
+az storage container delete --account-name mystorageacct123 --name mycontainer --auth-mode login
+
+az functionapp delete --resource-group myResourceGroup --name myFunctionApp123
+az vmss delete --resource-group myResourceGroup --name myVMSS
+az monitor log-analytics workspace delete --resource-group myResourceGroup --workspace-name myWorkspace --yes
+```
+
+**Safe deletion order** (since resources depend on each other):
+```
+VM → NIC → Disk / Public IP → NSG → VNet
+```
+**Practical note:** For lab cleanup, `az group delete --name myResourceGroup
+--yes --no-wait` is almost always the better move — it sidesteps
+dependency-order errors entirely and avoids orphaned resources quietly
+costing you money.
+
+---
+
+## 5. Understanding the Storage Credentials Warning
+
+When running a storage data-plane command (e.g. `az storage blob list`)
+without explicit credentials, the CLI prints a warning like:
+
+```
+There are no credentials provided in your command and environment, we will
+query for account key for your storage account.
+```
+
+**What's happening:** Storage data operations (listing blobs, uploading,
+creating containers) need to authenticate separately from your Azure login.
+Without you specifying how, the CLI automatically:
+1. Uses your Azure AD identity to look up the storage account
+2. Calls `az storage account keys list` behind the scenes to fetch an
+   account key
+3. Uses that key to run the actual command
+
+This works but is slower (extra API call) and requires the
+`Microsoft.Storage/storageAccounts/listkeys/action` permission (via
+**Contributor** or **Storage Account Key Operator** role).
+
+**Ways to avoid the warning:**
+
+```bash
+# Option 1 — Azure AD auth (matches RBAC-based labs)
+az storage blob list --account-name <name> --container-name <container> --auth-mode login
+
+# Option 2 — Pass the account key explicitly
+az storage account keys list --account-name <name> --resource-group <rg> --output table
+az storage blob list --account-name <name> --container-name <container> --account-key <key>
+
+# Option 3 — Use a connection string
+az storage account show-connection-string --name <name> --resource-group <rg>
+az storage blob list --connection-string "<connection-string>"
+
+# Option 4 — Set environment variables once
+export AZURE_STORAGE_CONNECTION_STRING="<connection-string>"
+# or
+export AZURE_STORAGE_ACCOUNT="<name>"
+export AZURE_STORAGE_KEY="<key>"
+```
+
+`--auth-mode login` is generally the cleanest fit for RBAC/Entra
+ID-based workflows since it reuses your existing signed-in identity rather
+than a separate key.
+
+---
+
+### Quick recap of the flow
+
+```
+Login → Confirm/switch subscription → Explore existing resources
+   → Create resource group → Create network/compute/storage
+   → (Handle storage auth if prompted) → Delete when done
+```
